@@ -2,7 +2,7 @@ EXENAME = main
 OBJS = main.o
 
 CXX = clang++
-CXXFLAGS = -std=c++14 -stdlib=libc++ -lpthread -lboost_system -Wall -lssl -lcrypto
+CXXFLAGS = -std=c++14 -lpthread -lboost_system -Wall -lssl -lcrypto
 
 #-stdlib=libc++ -lssl -lcrypto -Wall -lboost_system
 

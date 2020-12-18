@@ -43,46 +43,59 @@ int main() {
     server.config.port = port; //server port
     
     vector<int> listOfNodes; //vector of the ports of nodes in the network
-    
-    // BLOCK CHAIN INITIALIZATION AND ADDING SELF TO NETWORK
-    
     char ch;
-    printf("Are you the initial Node? (y or n) ");
-    scanf(" %c",&ch);
     BlockChain bc;
-    if (ch == 'y'){
-        // Initial Node: setup Blockchain with genesis block
-        bc = BlockChain(0);
-    }
-    else if(ch =='n'){
-        // New Node - need to add self to network by providing ports 
-        bc = BlockChain(0);
-        char otherPorts[50];
-        // Example input: 8000,3000,3030
-        printf("Enter ports of nodes in network(with commas in between): ");
-        scanf("%s",otherPorts);
-        stringstream ss(otherPorts);
-        int i;
-        // parse string of nodes and add them to listOfNoes
-        while (ss >> i)
-        {
-            listOfNodes.push_back(i);
-            if (ss.peek() == ',' || ss.peek() == ' ')
-                ss.ignore();
+    // BLOCK CHAIN INITIALIZATION AND ADDING SELF TO NETWORK
+    while (1){
+        
+        printf("Are you the initial Node? (y or n) ");
+        scanf(" %c",&ch);
+        
+        if (ch == 'y'){
+            // Initial Node: setup Blockchain with genesis block
+            bc = BlockChain(0);
+            break;
         }
-        addSelfToNetwork(&listOfNodes,server.config.port);
-        json chain = getChainFromNodes(&listOfNodes);
-        //skips first block - same genesis block across all nodes
-        for (int a = 1; a <chain["length"].get<int>(); a++ ){
-            auto block = chain["data"][a];
-            vector<string> data = block["data"].get<vector<string> >();
-            bc.addBlock(block["index"],block["previousHash"],block["hash"],block["nonce"],data);
-        } 
+        else if(ch =='n'){
+            // New Node - need to add self to network by providing ports 
+            bc = BlockChain(0);
+            char otherPorts[50];
+            // Example input: 8000,3000,3030
+            printf("Enter ports of nodes in network(with commas in between): ");
+            scanf("%s",otherPorts);
+            stringstream ss(otherPorts);
+            int i;
+            // parse string of nodes and add them to listOfNoes
+            printf("123\n");
+            while (ss >> i)
+            {
+                listOfNodes.push_back(i);
+                if (ss.peek() == ',' || ss.peek() == ' ')
+                    ss.ignore();
+            }
+            printf("123\n");
+            cout << "hello\n";
+            addSelfToNetwork(&listOfNodes,server.config.port);
+            printf("123\n");
+            json chain = getChainFromNodes(&listOfNodes);
+            if (chain == NULL){
+                printf("ports do not exist!\n\n");
+                continue;
+            }
+            
+            //skips first block - same genesis block across all nodes
+            for (int a = 1; a <chain["length"].get<int>(); a++ ){
+                auto block = chain["data"][a];
+                vector<string> data = block["data"].get<vector<string> >();
+                bc.addBlock(block["index"],block["previousHash"],block["hash"],block["nonce"],data);
+            } 
+            break;
+        }
+        else {
+            printf("unkown operations!\n");
+            continue;
+        }
     }
-    else {
-        return 0;
-    }
-
     // SERVER INITIALIZATION
 
 
@@ -167,10 +180,13 @@ int main() {
             }
         }
         else if (temp == 2){ // add a new block if 2
-            char tmp[201];
+            // char tmp[201];
+            string tmp;
+            getchar();
             printf("\nADDING BLOCKS!\nEnter your message: ");
-            scanf("%200s",tmp);
-            string str = tmp;
+            getline(cin, tmp);
+            // scanf("%200s",tmp);
+            string str = tmp; 
             printf("Entered '%s' into block\n",str.c_str());
             v.push_back(str);
 

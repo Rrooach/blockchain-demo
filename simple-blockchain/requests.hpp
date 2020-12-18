@@ -40,6 +40,7 @@ json getChainFromNodes(const vector<int> *listOfNodes){
         }
         catch(const SimpleWeb::system_error &e) {
             cerr << "Client request error: " << e.what() << endl;
+            return NULL;
         }
     }
 

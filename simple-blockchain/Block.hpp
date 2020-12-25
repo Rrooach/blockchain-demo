@@ -11,13 +11,15 @@
 #include "json.hh"
 using json = nlohmann::json;
 
+#include "../SMX/SMWrapper.h"
+
 class Block {
     public:
-        Block(int index, string prevHas, string hash, string nonce, vector<string> data);
+        Block(int index, string prevHas, string hash, string nonce, vector<string> data, SMWrapper::SM4Wrapper& sm4Wrapper, SMWrapper::SM2Wrapper& sm2Wrapper);
         string getPreviousHash(void);
         string getHash(void);
         int getIndex(void);
-        vector<string> getData(void);
+        vector<string> getData(SMWrapper::SM4Wrapper& sm4Wrapper, SMWrapper::SM2Wrapper& sm2Wrapper);
 
         void toString(void);
         json toJSON(void);
@@ -27,13 +29,21 @@ class Block {
         string blockHash;
         string nonce;
         vector<string> data;
+        string dataSig;
         // string getMerkleRoot(const vector<string> &merkle);
 };
 // Constructor 
-Block::Block(int index, string prevHash, string hash, string nonce, vector<string> data ) {
+Block::Block(int index, string prevHash, string hash, string nonce, vector<string> data, SMWrapper::SM4Wrapper& sm4Wrapper, SMWrapper::SM2Wrapper& sm2Wrapper ) {
     printf("\nInitializing Block: %d ---- Hash: %s \n", index,hash.c_str());
     this -> previousHash = prevHash;
-    this -> data = data;
+    string fullS;
+    for (std::string& s : data) {
+        string sext = s;
+        while (sext.size() % 16 != 0) sext += '\0';
+        this->data.push_back(sm4Wrapper.encrypt(sext));
+        fullS += sext;
+    }
+    this -> dataSig = sm2Wrapper.sign(fullS);
     this -> index = index;
     this -> nonce = nonce;
     this -> blockHash = hash;
@@ -52,8 +62,16 @@ string Block::getHash(void) {
     return this -> blockHash;
 }
 
-vector<string> Block::getData(void){
-    return this -> data;
+vector<string> Block::getData(SMWrapper::SM4Wrapper& sm4Wrapper, SMWrapper::SM2Wrapper& sm2Wrapper){
+    vector<string> ret;
+    string fullS;
+    for (const string& s : data) {
+        string tmp = sm4Wrapper.decrypt(s);
+        ret.push_back(tmp);
+        fullS += tmp;
+    }
+    assert (sm2Wrapper.verify(this->dataSig, fullS));
+    return ret;
 }
 
 // Prints Block data 
@@ -67,6 +85,7 @@ void Block::toString(void) {
     printf("\n-------------------------------\n");
 }
 
+
 json Block::toJSON(void) {
     json j;
     j["index"] = this->index;
@@ -76,5 +95,6 @@ json Block::toJSON(void) {
     j["data"] = this->data;
     return j;
 }
+
 
 #endif

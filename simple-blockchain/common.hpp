@@ -49,16 +49,10 @@ string getMerkleRoot(const vector<string> &merkle) {
 pair<string,string> findHash(int index, string prevHash, vector<string> &merkle) {
     string header = to_string(index) + prevHash + getMerkleRoot(merkle);
     unsigned int nonce;
-    for (nonce = 0; nonce < 100000; nonce++ ) {
-        string blockHash = sha256(header + to_string(nonce));
-        if (blockHash.substr(0,2) == "00"){
-            // cout << "nonce: " << nonce;
-            // cout << "header: " << header;
-            return make_pair(blockHash,to_string(nonce));
-            break;
-        }
-    }
-    return make_pair("fail","fail");
+    nonce = 155;
+    string blockHash = sha256(header + to_string(nonce));
+    return make_pair(blockHash,to_string(nonce));
+    
 }
 // int addBlock(int index, string prevHash, vector<string> &merkle, vector<unique_ptr<Block> > &blockchain) {
 //     string header = to_string(index) + prevHash + getMerkleRoot(merkle);

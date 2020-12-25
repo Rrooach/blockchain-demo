@@ -10,8 +10,10 @@
 #include <openssl/ripemd.h>
 using namespace std;
 
+#include "../SMX/SMWrapper.h"
 
 string sha256(const string str) {
+    /*
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -25,6 +27,9 @@ string sha256(const string str) {
     }
 
     return ss.str();
+    */
+   SMWrapper::SM3Wrapper wrapper;
+   return wrapper.hash(str);
 }
 
 #endif

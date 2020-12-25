@@ -1,5 +1,6 @@
 .vscode/
 main
+*.exe
 *.out
 *.o
 .DS_Store

@@ -32,6 +32,11 @@ Hash header: index + prevHash + merkleRoot(data) + nonce
  * Main function - sets up server, command line interface
  */
 int main() {
+
+    SMWrapper::SM2Wrapper sm2Wrapper;
+    SMWrapper::SM3Wrapper sm3Wrapper;
+    SMWrapper::SM4Wrapper sm4Wrapper;
+
     printf("Welcome! To quit-> Control c \n");
     HttpServer server;
 
@@ -44,7 +49,7 @@ int main() {
     
     vector<int> listOfNodes; //vector of the ports of nodes in the network
     char ch;
-    BlockChain bc;
+    BlockChain bc (sm4Wrapper, sm2Wrapper);
     // BLOCK CHAIN INITIALIZATION AND ADDING SELF TO NETWORK
     while (1){
         
@@ -53,12 +58,12 @@ int main() {
         
         if (ch == 'y'){
             // Initial Node: setup Blockchain with genesis block
-            bc = BlockChain(0);
+            bc = BlockChain(sm4Wrapper, sm2Wrapper, 0);
             break;
         }
         else if(ch =='n'){
             // New Node - need to add self to network by providing ports 
-            bc = BlockChain(0);
+            bc = BlockChain(sm4Wrapper, sm2Wrapper, 0);
             char otherPorts[50];
             // Example input: 8000,3000,3030
             printf("Enter ports of nodes in network(with commas in between): ");
@@ -87,7 +92,7 @@ int main() {
             for (int a = 1; a <chain["length"].get<int>(); a++ ){
                 auto block = chain["data"][a];
                 vector<string> data = block["data"].get<vector<string> >();
-                bc.addBlock(block["index"],block["previousHash"],block["hash"],block["nonce"],data);
+                bc.addBlock(sm4Wrapper, sm2Wrapper, block["index"],block["previousHash"],block["hash"],block["nonce"],data);
             } 
             break;
         }
@@ -127,12 +132,12 @@ int main() {
      * checks whether the length of the blockchain is bigger than our own blockchain
      * if it is bigger -> replace chain, else don't do anything
     */
-    server.resource["^/newchain$"]["POST"] = [&bc](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server.resource["^/newchain$"]["POST"] = [&bc, &sm4Wrapper, &sm2Wrapper](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         cout << "POST /newchain --- Node in Network sent new chain\n";
         try {
             json content = json::parse(request->content);
             if (content["length"].get<int>() > bc.getNumOfBlocks()){
-                bc.replaceChain(content);
+                bc.replaceChain(sm4Wrapper, sm2Wrapper, content);
                 cout << "----Replaced current chain with new one" << endl;
                 response->write("Replaced Chain\n");
             }
@@ -202,7 +207,7 @@ int main() {
                 // mine for the has
                 auto pair = findHash(bc.getNumOfBlocks(),bc.getLatestBlockHash(),v);
                 // add the block to the blockchain
-                bc.addBlock(bc.getNumOfBlocks(),bc.getLatestBlockHash(),pair.first,pair.second,v );
+                bc.addBlock(sm4Wrapper, sm2Wrapper, bc.getNumOfBlocks(),bc.getLatestBlockHash(),pair.first,pair.second,v);
                 // send the blockchain to the network
                 sendNewChain(&listOfNodes,bc.toJSON());
             }
